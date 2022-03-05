@@ -1,45 +1,78 @@
 const express = require('express');
-const morgan = require('morgan');
+
+const Partner = require('../models/partner');
 const partnerRouter = express.Router();
 
 partnerRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
+.get((req, res, next) => {
+    Partner.find()
+    .then(partner => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(partner);
+    })
+    .catch(err => next(err));
 })
-.get((req, res) => {
-    res.end('Will send all the partners to you');
-})
-.post((req, res) => {
-    res.end(`Will add the partner: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Partner.create(req.body)
+    .then(partner => {
+        console.log('Partner Created ', partner);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(partner);
+    })
+    .catch(err => next(err));
 })
 .put((req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /partners');
 })
-.delete((req, res) => {
-    res.end('Deleting all partners');
+.delete((req, res, next) => {
+    Partner.deleteMany()
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err));
 });
 
 partnerRouter.route('/:partnersId')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-})
-    .get((req, res) => {
-        res.end(`Will send all the ${req.params.partnersId} to you`);
+.get((req, res, next) => {
+    Partner.findById(req.params.partnersId)
+    .then(partner => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(partner);
     })
+    .catch(err => next(err));
+})
     .post((req, res) => {
         res.statusCode = 403;
         res.end('POST operation not supported on /partners/id');
     })
-    .put((req, res) => {
-        res.end(`Will update ${req.params.partnersId} with ${req.body.name}`);
+    .put((req, res, next) => {
+        Partner.findByIdAndUpdate(req.params.partnersId, {
+            $set: req.body
+        }, { new: true })
+        .then(partner => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(partner);
+        })
+        .catch(err => next(err));
     })
-    .delete((req, res) => {
-        res.end(`Deleting partner: ${req.params.partnersId}`);
+    .delete((req, res, next) => {
+        Partner.findByIdAndDelete(req.params.partnersId)
+        .then(response => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(response);
+        })
+        .catch(err => next(err));
     });
 
 module.exports = partnerRouter;
+
+
+
